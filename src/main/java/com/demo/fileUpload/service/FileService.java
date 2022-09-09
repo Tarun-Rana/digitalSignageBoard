@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -66,4 +69,9 @@ public class FileService {
         return loadFile;
     }
 
+    public List<GridFSFile> getAllFiles() {
+        List<GridFSFile> fileList = new ArrayList<GridFSFile>();
+        fileList = template.find(new Query()).into(fileList);
+        return fileList.stream().collect(Collectors.toList());
+    }
 }

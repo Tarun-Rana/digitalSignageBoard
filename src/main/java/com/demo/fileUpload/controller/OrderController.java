@@ -6,7 +6,9 @@ import com.demo.fileUpload.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -24,6 +26,10 @@ public class OrderController {
     @PostMapping("/save")
     public String saveSequence(@RequestBody Order order){
         return orderService.setSequence(order);
+    }
+    @GetMapping("/getOrder/{id}")
+    public Order getOrder(@PathVariable String id){
+        return orderService.getSequence(id);
     }
 
 }
