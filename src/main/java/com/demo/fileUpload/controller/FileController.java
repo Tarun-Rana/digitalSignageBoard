@@ -51,9 +51,9 @@ public class FileController {
     }
 
     @GetMapping("/getFile/{id}")
-    public MultipartFile getFile(@PathVariable String id){
+    public LoadFile getFile(@PathVariable String id){
         try {
-            return (MultipartFile) fileService.downloadFile(id);
+            return fileService.downloadFile(id);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

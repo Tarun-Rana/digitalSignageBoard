@@ -31,9 +31,6 @@ public class FileService {
 
     public String addFile(MultipartFile upload) throws IOException {
 
-        log.info(upload.toString());
-        log.info(upload.getContentType());
-        log.info(upload.getSize()+"");
 
         //define additional metadata
         DBObject metadata = new BasicDBObject();
