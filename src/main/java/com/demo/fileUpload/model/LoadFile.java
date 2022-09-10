@@ -34,10 +34,6 @@ public class LoadFile {
         this.fileType = fileType;
     }
 
-    public String getFileSize() {
-        return fileSize;
-    }
-
     public void setFileSize(String fileSize) {
         this.fileSize = fileSize;
     }

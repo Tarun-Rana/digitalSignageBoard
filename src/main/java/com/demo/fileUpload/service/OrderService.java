@@ -22,15 +22,12 @@ public class OrderService {
 
     public String setSequence (Order order){
         order.setDate(String.valueOf(LocalDateTime.now()));
-        log.info(order.toString());
         return orderRepository.save(order).getId();
 
     }
 
     public List<Order> getAllSequence (){
-
         return orderRepository.findAll();
-
     }
 
     public Order getSequence(String id){

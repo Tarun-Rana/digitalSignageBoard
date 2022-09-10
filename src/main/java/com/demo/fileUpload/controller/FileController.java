@@ -1,7 +1,9 @@
 package com.demo.fileUpload.controller;
 
+import com.demo.fileUpload.model.FileStore;
 import com.demo.fileUpload.model.LoadFile;
 import com.demo.fileUpload.model.StringResponse;
+import com.demo.fileUpload.repository.FileStoreRepository;
 import com.demo.fileUpload.service.FileService;
 import org.bson.json.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -23,6 +26,7 @@ public class FileController {
 
     @Autowired
     private FileService fileService;
+    private FileStoreRepository fileStoreRepository;
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("file")MultipartFile file) throws IOException {
@@ -37,6 +41,18 @@ public class FileController {
         stringResponse.setResponse(fileService.addFile(file).toString());
         return stringResponse;
     }
+    @PostMapping("/uploadNewFile")
+    public Object uploadNewFile(@RequestParam("file")MultipartFile file) throws IOException {
+        System.out.println("Post Started File");
+
+        StringResponse stringResponse= new StringResponse();
+        FileStore fileStore = new FileStore();
+
+       // fileStore.setImg(file.getInputStream());
+       // stringResponse.setResponse(fileStoreRepository.save());
+        return stringResponse;
+    }
+
 
     @GetMapping("/download/{id}")
     public ResponseEntity<ByteArrayResource> download(@PathVariable String id) throws IOException {
@@ -66,7 +82,8 @@ public class FileController {
     @GetMapping("/getFile/{id}")
     public MultipartFile getFile(@PathVariable String id){
         try {
-            return (MultipartFile) fileService.downloadFile(id);
+            LoadFile loadFile = fileService.downloadFile(id);
+            return (MultipartFile) loadFile;
         } catch (IOException e) {
             e.printStackTrace();
             return null;

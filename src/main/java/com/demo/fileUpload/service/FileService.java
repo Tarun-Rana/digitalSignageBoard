@@ -7,8 +7,10 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -17,6 +19,7 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -35,12 +38,8 @@ public class FileService {
 
     public Object addFile(MultipartFile upload) throws IOException {
 
-        log.info(upload.toString());
-        log.info(upload.getContentType());
-        log.info(upload.getSize()+"");
-
         if(upload.getContentType().equals("application/pdf")){
-
+            generateImageFromPDF(upload.getOriginalFilename(),upload.getContentType());
         }
         //define additional metadata
         DBObject metadata = new BasicDBObject();
@@ -58,8 +57,8 @@ public class FileService {
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(
                     page, 300, ImageType.RGB);
-            //ImageIOUtil.writeImage(
-            //        bim, String.format("src/output/pdf-%d.%s", page + 1, extension), 300);
+            ImageIOUtil.writeImage(
+                    bim, String.format("src/output/pdf-%d.%s", page + 1, extension), 300);
         }
         document.close();
     }
@@ -77,11 +76,8 @@ public class FileService {
 
         if (gridFSFile != null && gridFSFile.getMetadata() != null) {
             loadFile.setFilename( gridFSFile.getFilename() );
-
             loadFile.setFileType( gridFSFile.getMetadata().get("_contentType").toString() );
-
             loadFile.setFileSize( gridFSFile.getMetadata().get("fileSize").toString() );
-
             loadFile.setFile( IOUtils.toByteArray(operations.getResource(gridFSFile).getInputStream()) );
         }
 
@@ -97,12 +93,9 @@ public class FileService {
             LoadFile loadFile = new LoadFile();
             loadFile.setFile(IOUtils.toByteArray(operations.getResource(file).getInputStream()));
             loadFile.setFilename( file.getFilename() );
-
             loadFile.setFileType( file.getMetadata().get("_contentType").toString() );
-
             loadFile.setFileSize( file.getMetadata().get("fileSize").toString() );
             loadFiles.add(loadFile);
-
         }
         return loadFiles;
     }
