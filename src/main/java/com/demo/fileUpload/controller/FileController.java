@@ -2,6 +2,7 @@ package com.demo.fileUpload.controller;
 
 import com.demo.fileUpload.model.LoadFile;
 import com.demo.fileUpload.service.FileService;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -44,25 +45,15 @@ public class FileController {
                 .body(new ByteArrayResource(loadFile.getFile()));
     }
 
-    @GetMapping("/viewLink/{id}")
-    public ResponseEntity<ByteArrayResource> viewLink(@PathVariable String id) throws IOException {
-        LoadFile loadFile = fileService.downloadFile(id);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(loadFile.getFileType() ))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + loadFile.getFilename() + "\"")
-                .body(new ByteArrayResource(loadFile.getFile()));
-    }
-
     @GetMapping("allInfo")
-    public List<LoadFile> getAllFileDetails() throws IOException {
+    public List<GridFSFile> getAllFileDetails(){
         return fileService.getAllFiles();
     }
 
     @GetMapping("/getFile/{id}")
     public LoadFile getFile(@PathVariable String id){
         try {
-            return fileService.downloadFile(id);
+            return fileService.downloadFile(id).getFile();
         } catch (IOException e) {
             e.printStackTrace();
             return null;

@@ -42,7 +42,7 @@ public class LoadFile {
         this.fileSize = fileSize;
     }
 
-    public byte[] getFile() {
+    public LoadFile getFile() {
         return file;
     }
 
