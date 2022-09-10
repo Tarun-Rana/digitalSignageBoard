@@ -33,8 +33,11 @@ public class FileService {
     @Autowired
     private GridFsOperations operations;
 
-    public String addFile(MultipartFile upload) throws IOException {
+    public Object addFile(MultipartFile upload) throws IOException {
 
+        log.info(upload.toString());
+        log.info(upload.getContentType());
+        log.info(upload.getSize()+"");
 
         if(upload.getContentType().equals("application/pdf")){
 
@@ -47,7 +50,7 @@ public class FileService {
         //store in database which returns the objectID
         Object fileID = template.store(upload.getInputStream(), upload.getOriginalFilename(), upload.getContentType(), metadata);
         //return as a string
-        return fileID.toString();
+        return fileID;
     }
     private void generateImageFromPDF(String filename, String extension) throws IOException {
         PDDocument document = PDDocument.load(new File(filename));
@@ -55,8 +58,8 @@ public class FileService {
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(
                     page, 300, ImageType.RGB);
-           // ImageIOUtil.writeImage(
-             //       bim, String.format("src/output/pdf-%d.%s", page + 1, extension), 300);
+            //ImageIOUtil.writeImage(
+            //        bim, String.format("src/output/pdf-%d.%s", page + 1, extension), 300);
         }
         document.close();
     }

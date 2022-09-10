@@ -29,7 +29,7 @@ public class FileController {
     }
 
     @PostMapping("/uploadFile")
-    public String uploadFile(@RequestParam("file")MultipartFile file) throws IOException {
+    public Object uploadFile(@RequestParam("file")MultipartFile file) throws IOException {
         System.out.println("Post Started File");
         return fileService.addFile(file);
     }
@@ -60,9 +60,9 @@ public class FileController {
     }
 
     @GetMapping("/getFile/{id}")
-    public LoadFile getFile(@PathVariable String id){
+    public MultipartFile getFile(@PathVariable String id){
         try {
-            return fileService.downloadFile(id);
+            return (MultipartFile) fileService.downloadFile(id);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

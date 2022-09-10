@@ -22,6 +22,7 @@ public class OrderService {
 
     public String setSequence (Order order){
         order.setDate(String.valueOf(LocalDateTime.now()));
+        log.info(order.toString());
         return orderRepository.save(order).getId();
 
     }
