@@ -6,6 +6,9 @@ import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -14,10 +17,11 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -35,6 +39,9 @@ public class FileService {
         log.info(upload.getContentType());
         log.info(upload.getSize()+"");
 
+        if(upload.getContentType().equals("application/pdf")){
+
+        }
         //define additional metadata
         DBObject metadata = new BasicDBObject();
         metadata.put("fileSize", upload.getSize());
@@ -45,6 +52,18 @@ public class FileService {
         //return as a string
         return fileID.toString();
     }
+    private void generateImageFromPDF(String filename, String extension) throws IOException {
+        PDDocument document = PDDocument.load(new File(filename));
+        PDFRenderer pdfRenderer = new PDFRenderer(document);
+        for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(
+                    page, 300, ImageType.RGB);
+           // ImageIOUtil.writeImage(
+             //       bim, String.format("src/output/pdf-%d.%s", page + 1, extension), 300);
+        }
+        document.close();
+    }
+
 
     public LoadFile downloadFile(String id) throws IOException {
 
@@ -69,9 +88,22 @@ public class FileService {
         return loadFile;
     }
 
-    public List<GridFSFile> getAllFiles() {
+    public List<LoadFile> getAllFiles() throws IOException {
         List<GridFSFile> fileList = new ArrayList<GridFSFile>();
+        List<LoadFile> loadFiles = new ArrayList<>();
         fileList = template.find(new Query()).into(fileList);
-        return fileList.stream().collect(Collectors.toList());
+        for (GridFSFile file:fileList
+             ) {
+            LoadFile loadFile = new LoadFile();
+            loadFile.setFile(IOUtils.toByteArray(operations.getResource(file).getInputStream()));
+            loadFile.setFilename( file.getFilename() );
+
+            loadFile.setFileType( file.getMetadata().get("_contentType").toString() );
+
+            loadFile.setFileSize( file.getMetadata().get("fileSize").toString() );
+            loadFiles.add(loadFile);
+
+        }
+        return loadFiles;
     }
 }
