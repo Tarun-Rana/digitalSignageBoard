@@ -46,11 +46,11 @@ public class FileService {
         DBObject metadata = new BasicDBObject();
         metadata.put("fileSize", upload.getSize());
         System.out.println(upload);
-
         //store in database which returns the objectID
         Object fileID = template.store(upload.getInputStream(), upload.getOriginalFilename(), upload.getContentType(), metadata);
         //return as a string
-        return fileID;
+
+        return fileID+"";
     }
     private void generateImageFromPDF(String filename, String extension) throws IOException {
         PDDocument document = PDDocument.load(new File(filename));

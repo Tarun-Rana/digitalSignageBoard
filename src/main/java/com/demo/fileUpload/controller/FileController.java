@@ -1,7 +1,9 @@
 package com.demo.fileUpload.controller;
 
 import com.demo.fileUpload.model.LoadFile;
+import com.demo.fileUpload.model.StringResponse;
 import com.demo.fileUpload.service.FileService;
+import org.bson.json.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +33,9 @@ public class FileController {
     @PostMapping("/uploadFile")
     public Object uploadFile(@RequestParam("file")MultipartFile file) throws IOException {
         System.out.println("Post Started File");
-        return fileService.addFile(file);
+        StringResponse stringResponse= new StringResponse();
+        stringResponse.setResponse(fileService.addFile(file).toString());
+        return stringResponse;
     }
 
     @GetMapping("/download/{id}")
