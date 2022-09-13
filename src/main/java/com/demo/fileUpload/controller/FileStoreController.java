@@ -5,10 +5,13 @@ import com.demo.fileUpload.model.Image;
 import com.demo.fileUpload.repository.FileStoreRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.bson.BsonBinarySubType;
 import org.bson.types.Binary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,13 +36,14 @@ public class FileStoreController {
 
     @Autowired
     FileStoreRepository fileStoreRepository;
+    ResourceLoader resourceLoader;
 
     @RequestMapping(value="savefile",method=RequestMethod.POST)
     public String saveimage( @RequestParam MultipartFile file,
                              HttpSession session) throws Exception{
         FileStore fileStore = new FileStore();
         ServletContext context = session.getServletContext();
-        String path = ("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/images");
+        String path = ("/Users/tarun/Documents/GitHub/digitalSignageBoard/target/images");
         String filename = file.getOriginalFilename().replaceAll(" ","_");
         fileStore.setFileSize(file.getSize()+"");
         fileStore.setFilename(filename);
@@ -68,13 +69,23 @@ public class FileStoreController {
     public void getImagebyId(@PathVariable String id,HttpServletResponse response) throws IOException {
 
         //var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
-        FileStore fileStore = new FileStore();
-        fileStore=fileStoreRepository.findById(id).orElse(null);
+        FileStore fileStore = fileStoreRepository.findById(id).orElse(null);
         var imgFile = new ClassPathResource(fileStore.getFilePath());
         response.setContentType(MediaType.IMAGE_JPEG_VALUE);
         StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
     }
-
+    @GetMapping(
+            value = "/get-file/{id}",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
+    )
+    public @ResponseBody void getFile(@PathVariable String id,HttpServletResponse response) throws IOException {
+        FileStore fileStore = fileStoreRepository.findById(id).orElse(null);
+        String path = "/Users/tarun/Documents/GitHub/digitalSignageBoard/target/"+fileStore.getFilePath();
+        InputStream in = getClass()
+                .getResourceAsStream(path);
+        response.setContentType(MediaType.IMAGE_JPEG_VALUE);
+        StreamUtils.copy(inputStream, response.getOutputStream());
+    }
     @RequestMapping(value = "/sid", method = RequestMethod.GET,
             produces = MediaType.IMAGE_JPEG_VALUE)
 
