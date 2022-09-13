@@ -86,6 +86,15 @@ public class FileStoreController {
         StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
     }
 
+    @RequestMapping(value = "/downloadAll", method = RequestMethod.GET)
+
+    public List<FileStore> getAllImages() throws IOException {
+
+        //var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
+        List<FileStore> fileStores = new ArrayList<>();
+        fileStores=fileStoreRepository.findAll();
+        return fileStores;
+    }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> createAppreciation(
