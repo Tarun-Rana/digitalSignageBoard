@@ -2,7 +2,6 @@ package com.demo.fileUpload.controller;
 
 import com.demo.fileUpload.model.FileStore;
 import com.demo.fileUpload.model.Image;
-import com.demo.fileUpload.model.StringResponse;
 import com.demo.fileUpload.repository.FileStoreRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -39,11 +38,11 @@ public class FileStoreController {
     FileStoreRepository fileStoreRepository;
 
     @RequestMapping(value="savefile",method=RequestMethod.POST)
-    public StringResponse saveimage( @RequestParam MultipartFile file,
+    public String saveimage( @RequestParam MultipartFile file,
                              HttpSession session) throws Exception{
         FileStore fileStore = new FileStore();
         ServletContext context = session.getServletContext();
-        String path = ("C:\\Users\\vijay mishra\\Documents\\digitalSignageBoard\\src\\main\\resources\\images");
+        String path = ("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/images");
         String filename = file.getOriginalFilename().replaceAll(" ","_");
         fileStore.setFileSize(file.getSize()+"");
         fileStore.setFilename(filename);
@@ -51,7 +50,7 @@ public class FileStoreController {
         fileStore.setCreateTimestamp(LocalDateTime.now());
         fileStore.setFilePath("images/"+filename);
         fileStoreRepository.save(fileStore);
-        System.out.println(path+"\\"+filename);
+        System.out.println(path+"/"+filename);
 
         byte[] bytes = file.getBytes();
         BufferedOutputStream stream =new BufferedOutputStream(new FileOutputStream(
@@ -59,15 +58,14 @@ public class FileStoreController {
         stream.write(bytes);
         stream.flush();
         stream.close();
-        StringResponse stringResponse = new StringResponse();
-        stringResponse.setResponse(fileStore.getId());
-        return stringResponse;
+
+        return fileStore.getId();
     }
 
     @RequestMapping(value = "/downloadById/{id}", method = RequestMethod.GET,
             produces = MediaType.IMAGE_JPEG_VALUE)
 
-    public StringResponse getImagebyId(@PathVariable String id,HttpServletResponse response) throws IOException {
+    public void getImagebyId(@PathVariable String id,HttpServletResponse response) throws IOException {
 
         //var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
         FileStore fileStore = new FileStore();
@@ -75,21 +73,7 @@ public class FileStoreController {
         var imgFile = new ClassPathResource(fileStore.getFilePath());
         response.setContentType(MediaType.IMAGE_JPEG_VALUE);
         StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
-        StringResponse stringResponse = new StringResponse();
-        stringResponse.setResponse(StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream())+"");
-        return stringResponse;
     }
-    
-    @RequestMapping(value = "/downloadAll", method = RequestMethod.GET)
-
-    public List<FileStore> getAllImages() throws IOException {
-
-        //var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
-    	List<FileStore> fileStores = new ArrayList<>();
-        fileStores=fileStoreRepository.findAll();
-        return fileStores;
-    }
-
 
     @RequestMapping(value = "/sid", method = RequestMethod.GET,
             produces = MediaType.IMAGE_JPEG_VALUE)
@@ -121,6 +105,7 @@ public class FileStoreController {
                 try {
                     String string =Base64.getEncoder().encodeToString(file.getBytes()).replaceAll("\"", "");
                     encodedImageList.add(string);
+                    log.info(encodedImageList.get(0));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
