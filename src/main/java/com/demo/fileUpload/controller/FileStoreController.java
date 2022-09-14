@@ -2,6 +2,7 @@ package com.demo.fileUpload.controller;
 
 import com.demo.fileUpload.model.FileStore;
 import com.demo.fileUpload.model.Image;
+import com.demo.fileUpload.model.StringResponse;
 import com.demo.fileUpload.repository.FileStoreRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -39,11 +40,11 @@ public class FileStoreController {
     ResourceLoader resourceLoader;
 
     @RequestMapping(value="savefile",method=RequestMethod.POST)
-    public String saveimage( @RequestParam MultipartFile file,
-                             HttpSession session) throws Exception{
+    public StringResponse saveimage(@RequestParam MultipartFile file,
+                                    HttpSession session) throws Exception{
         FileStore fileStore = new FileStore();
         ServletContext context = session.getServletContext();
-        String path = ("/Users/tarun/Documents/GitHub/digitalSignageBoard/target/images");
+        String path = ("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/images");
         String filename = file.getOriginalFilename().replaceAll(" ","_");
         fileStore.setFileSize(file.getSize()+"");
         fileStore.setFilename(filename);
@@ -60,7 +61,9 @@ public class FileStoreController {
         stream.flush();
         stream.close();
 
-        return fileStore.getId();
+        StringResponse stringResponse = new StringResponse();
+        stringResponse.setResponse(fileStore.getId());
+        return stringResponse;
     }
 
     @RequestMapping(value = "/downloadById/{id}", method = RequestMethod.GET,
@@ -73,6 +76,7 @@ public class FileStoreController {
         var imgFile = new ClassPathResource(fileStore.getFilePath());
         response.setContentType(MediaType.IMAGE_JPEG_VALUE);
         StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
+
     }
     @GetMapping(
             value = "/get-file/{id}",
@@ -84,7 +88,11 @@ public class FileStoreController {
         InputStream in = getClass()
                 .getResourceAsStream(path);
         response.setContentType(MediaType.IMAGE_JPEG_VALUE);
-        StreamUtils.copy(inputStream, response.getOutputStream());
+   //     StreamUtils.copy(inputStream, response.getOutputStream());
+        File initialFile = new File("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/"+
+                fileStore.getFilePath());
+        InputStream targetStream = FileUtils.openInputStream(initialFile);
+        StreamUtils.copy(targetStream, response.getOutputStream());
     }
     @RequestMapping(value = "/sid", method = RequestMethod.GET,
             produces = MediaType.IMAGE_JPEG_VALUE)
