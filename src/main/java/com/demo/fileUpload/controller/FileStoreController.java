@@ -6,12 +6,13 @@ import com.demo.fileUpload.model.StringResponse;
 import com.demo.fileUpload.repository.FileStoreRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.bson.BsonBinarySubType;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.bson.types.Binary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -66,6 +68,49 @@ public class FileStoreController {
         return stringResponse;
     }
 
+    @RequestMapping(value="savePDF",method=RequestMethod.POST)
+    public StringResponse savePDF(@RequestParam MultipartFile file,
+                                    HttpSession session) throws Exception{
+
+
+        FileStore fileStore = new FileStore();
+        ServletContext context = session.getServletContext();
+        String path = ("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/pdf");
+        String filename = file.getOriginalFilename().replaceAll(" ","_");
+        fileStore.setFileSize(file.getSize()+"");
+        fileStore.setFilename(filename);
+        fileStore.setFileType(file.getContentType());
+        fileStore.setCreateTimestamp(LocalDateTime.now());
+        fileStore.setFilePath("pdf/"+filename);
+
+        System.out.println(path+"/"+filename);
+
+        byte[] bytes = file.getBytes();
+        BufferedOutputStream stream =new BufferedOutputStream(new FileOutputStream(
+                new File(path + File.separator + filename)));
+        stream.write(bytes);
+        stream.flush();
+        stream.close();
+
+        PDDocument document = PDDocument.load(new File("/Users/tarun/Documents/GitHub/digitalSignageBoard" +
+                "/src/main/resources/"+fileStore.getFilePath()));
+        fileStore.setCount(document.getNumberOfPages());
+        fileStoreRepository.save(fileStore);
+        PDFRenderer pdfRenderer = new PDFRenderer(document);
+        for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(
+                    page, 300, ImageType.RGB);
+            ImageIOUtil.writeImage(
+                    bim, String.format("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/pdf" +
+                            "/"+fileStore.getFilename()+"-%d.%s", page + 1, "png"), 300);
+        }
+        document.close();
+
+        StringResponse stringResponse = new StringResponse();
+        stringResponse.setResponse(fileStore.getId()+" "+fileStore.getCount());
+        return stringResponse;
+    }
+
     @RequestMapping(value = "/downloadById/{id}", method = RequestMethod.GET,
             produces = MediaType.IMAGE_JPEG_VALUE)
 
@@ -73,6 +118,7 @@ public class FileStoreController {
 
         //var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
         FileStore fileStore = fileStoreRepository.findById(id).orElse(null);
+
         var imgFile = new ClassPathResource(fileStore.getFilePath());
         response.setContentType(MediaType.IMAGE_JPEG_VALUE);
         StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
@@ -93,16 +139,6 @@ public class FileStoreController {
                 fileStore.getFilePath());
         InputStream targetStream = FileUtils.openInputStream(initialFile);
         StreamUtils.copy(targetStream, response.getOutputStream());
-    }
-    @RequestMapping(value = "/sid", method = RequestMethod.GET,
-            produces = MediaType.IMAGE_JPEG_VALUE)
-
-    public void getImage(HttpServletResponse response) throws IOException {
-
-        var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
-
-        response.setContentType(MediaType.IMAGE_JPEG_VALUE);
-        StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
     }
 
     @RequestMapping(value = "/downloadAll", method = RequestMethod.GET)

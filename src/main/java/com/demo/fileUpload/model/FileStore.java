@@ -28,6 +28,12 @@ public class FileStore {
     private String fileType;
     private String fileSize;
     private String filePath;
+    private int count;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime createTimestamp;
 
     public String getFilePath() {
         return filePath;
@@ -61,12 +67,6 @@ public class FileStore {
         this.fileSize = fileSize;
     }
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime createTimestamp;
-
     public LocalDateTime getCreateTimestamp() {
         return createTimestamp;
     }
@@ -89,5 +89,13 @@ public class FileStore {
 
     public void setImage(Image image) {
         this.image = image;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 }
