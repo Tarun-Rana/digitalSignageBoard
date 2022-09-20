@@ -4,6 +4,7 @@ import com.demo.fileUpload.model.FileStore;
 import com.demo.fileUpload.model.Image;
 import com.demo.fileUpload.model.StringResponse;
 import com.demo.fileUpload.repository.FileStoreRepository;
+import com.demo.fileUpload.service.VideoStreamService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -12,14 +13,18 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.bson.types.Binary;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
@@ -39,7 +44,7 @@ public class FileStoreController {
 
     @Autowired
     FileStoreRepository fileStoreRepository;
-    ResourceLoader resourceLoader;
+    VideoStreamService videoStreamService;
 
     @RequestMapping(value="savefile",method=RequestMethod.POST)
     public StringResponse saveimage(@RequestParam MultipartFile file,
@@ -111,6 +116,19 @@ public class FileStoreController {
         return stringResponse;
     }
 
+    @RequestMapping(value = "/downloadByPDfId/{id}", method = RequestMethod.GET,
+            produces = MediaType.IMAGE_JPEG_VALUE)
+    public void downloadByPDfId(@PathVariable String id, HttpServletResponse response) throws IOException {
+
+        //var imgFile = new ClassPathResource("images/photo-1543373014-cfe4f4bc1cdf.jpeg");
+        String[] data = id.split(" ");
+        FileStore fileStore = fileStoreRepository.findById(data[0]).orElse(null);
+        var imgFile = new ClassPathResource(fileStore.getFilePath()+"-"+data[1]+".png");
+        response.setContentType(MediaType.IMAGE_JPEG_VALUE);
+        StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
+
+    }
+
     @RequestMapping(value = "/downloadById/{id}", method = RequestMethod.GET,
             produces = MediaType.IMAGE_JPEG_VALUE)
 
@@ -123,6 +141,14 @@ public class FileStoreController {
         response.setContentType(MediaType.IMAGE_JPEG_VALUE);
         StreamUtils.copy(imgFile.getInputStream(), response.getOutputStream());
 
+    }
+
+    @GetMapping("/stream/{fileType}/{fileName}")
+    public Mono<ResponseEntity<byte[]>> streamVideo(ServerHttpResponse serverHttpResponse, @RequestHeader(value = "Range", required = false) String httpRangeList,
+                                                    @PathVariable String id) {
+        FileStore fileStore = fileStoreRepository.findById(id).orElse(null);
+        return Mono.just(videoStreamService.prepareContent(fileStore.getFilename(),
+                fileStore.getFileType(), httpRangeList));
     }
     @GetMapping(
             value = "/get-file/{id}",
