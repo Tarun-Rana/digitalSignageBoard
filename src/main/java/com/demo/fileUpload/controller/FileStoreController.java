@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ public class FileStoreController {
     @Autowired
     FileStoreRepository fileStoreRepository;
     VideoStreamService videoStreamService;
+    ResourceLoader resourceLoader;
 
     @RequestMapping(value="savefile",method=RequestMethod.POST)
     public StringResponse saveimage(@RequestParam MultipartFile file,
@@ -143,13 +145,22 @@ public class FileStoreController {
 
     }
 
-    @GetMapping("/stream/{fileType}/{fileName}")
-    public Mono<ResponseEntity<byte[]>> streamVideo(ServerHttpResponse serverHttpResponse, @RequestHeader(value = "Range", required = false) String httpRangeList,
+    @GetMapping("/stream/{fileName}")
+    public Mono<ResponseEntity<byte[]>> streamVideo(@RequestHeader(value = "Range", required = false) String httpRangeList,
                                                     @PathVariable String id) {
         FileStore fileStore = fileStoreRepository.findById(id).orElse(null);
         return Mono.just(videoStreamService.prepareContent(fileStore.getFilename(),
                 fileStore.getFileType(), httpRangeList));
     }
+
+    @GetMapping(value = "video/{title}", produces = "video/mp4")
+    public ResponseEntity<Resource> getVideoByName(@PathVariable("title") String name) throws IOException {
+        System.out.println(name);
+        InputStream is = new FileInputStream("/Users/tarun/Documents/GitHub/digitalSignageBoard/src/main/resources/videos/vid.mp4");
+        return ResponseEntity
+                .ok(new ByteArrayResource(is.readAllBytes()));
+    }
+
     @GetMapping(
             value = "/get-file/{id}",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
