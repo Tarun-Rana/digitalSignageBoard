@@ -90,4 +90,11 @@ public class FileController {
         }
     }
 
+    @DeleteMapping("deleteFile/{id}")
+    public void deleteFile(@PathVariable String id){
+         fileStoreRepository.deleteById(id);
+    }
+
+
+
 }
